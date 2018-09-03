@@ -103,13 +103,82 @@ namespace Iris.Importer
                                     result.AddMessage(validator.CheckAddress(cellValue));
                                     result.Employee.ContactInfo.Address = cellValue;
                                     break;
+                                case 5:
+                                    result.AddMessage(validator.CheckCity(cellValue));
+                                    result.Employee.ContactInfo.City = cellValue;
+                                    break;
+                                case 6:
+                                    result.AddMessage(validator.CheckTK(cellValue));
+                                    result.Employee.ContactInfo.TK = cellValue;
+                                    break;
+                                case 7:
+                                    result.AddMessage(validator.CheckPhone(cellValue));
+                                    result.Employee.ContactInfo.PhoneNo = cellValue;
+                                    break;
+                                case 8:
+                                    result.AddMessage(validator.CheckMobilePhone(cellValue));
+                                    result.Employee.ContactInfo.MobilePhoneNo = cellValue;
+                                    break;
+                                case 9:
+                                    result.AddMessage(validator.CheckEmail(cellValue));
+                                    result.Employee.ContactInfo.EMail = cellValue;
+                                    break;
+                                case 10:
+                                    EmployeeCategory category;
+                                    result.AddMessage(validator.CheckCategory(cellValue, out category));
+                                    result.Employee.Category = category;
+                                    break;
+                                case 11:
+                                    Lookup<int> rank;
+                                    result.AddMessage(validator.CheckRank(cellValue, out rank));
+                                    result.Employee.Rank = rank;
+                                    break;
+                                case 12:
+                                    Lookup<int> speciality;
+                                    result.AddMessage(validator.CheckSpeciality(cellValue, out speciality));
+                                    result.Employee.Speciality = speciality;
+                                    break;
+                                case 13:
+                                    Lookup<int> oType;
+                                    result.AddMessage(validator.CheckOccupationType(cellValue, out oType));
+                                    result.Employee.OccupationType = oType;
+                                    break;
+                                case 14:
+                                    Lookup<int> position;
+                                    result.AddMessage(validator.CheckPosition(cellValue, out position));
+                                    result.Employee.Position = position;
+                                    break;
+                                case 15:
+                                    Lookup<int> unit;
+                                    result.AddMessage(validator.CheckPosition(cellValue, out unit));
+                                    result.Employee.Unit = unit;
+                                    break;
+                                case 16:
+                                    Lookup<int> duty;
+                                    result.AddMessage(validator.CheckDuty(cellValue, out duty));
+                                    result.Employee.Duties.First().Duty = duty;
+                                    break;
+                                case 17:
+                                    Lookup<int> dutyPosition;
+                                    result.AddMessage(validator.CheckPosition(cellValue, out dutyPosition));
+                                    result.Employee.Duties.First().Position = dutyPosition;
+                                    break;
                             }
                         }
                     }
 
-                    result.WriteLine(this.richTextBox1);
+                    result.WriteLine(this.richTextBox1, row);
                 }
             }
-        }               
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            for (var i=0;i<this.flowLayoutPanel1.Controls.Count;i++)
+            {
+                var header = this.flowLayoutPanel1.Controls[i] as HeaderSelector;
+                header.SetIndex(i);
+            }
+        }
     }
 }

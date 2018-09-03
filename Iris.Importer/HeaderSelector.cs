@@ -32,9 +32,20 @@ namespace Iris.Importer
                 this.comboBox1.Text = string.Empty;
             }
         }
+
         public HeaderSelector()
         {
             InitializeComponent();
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            this.checkBox1.Checked = this.comboBox1.SelectedIndex != -1;
+        }
+
+        public void SetIndex(int index)
+        {
+            this.comboBox1.SelectedIndex = index;
         }
     }
 

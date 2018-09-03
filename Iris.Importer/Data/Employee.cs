@@ -1,8 +1,10 @@
-﻿using System;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using System;
 using System.Collections.Generic;
 
 namespace Iris.Importer
 {
+    [BsonIgnoreExtraElements]
     public class Employee 
     {
         #region Properties

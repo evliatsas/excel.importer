@@ -17,6 +17,8 @@ namespace Iris.Importer
         public CheckResult()
         {
             this.Employee = new Employee();
+            this.Employee.Duties = new List<AssignedDuty>() { new AssignedDuty() };
+            this.Employee.ContactInfo = new ContactInfo();
             this.Warnings = new List<ValidationMessage>();
             this.Errors = new List<ValidationMessage>();
         }
@@ -29,12 +31,13 @@ namespace Iris.Importer
                 this.Warnings.Add(message);
         }
 
-        public void WriteLine(RichTextBox box)
+        public void WriteLine(RichTextBox box, int lineIndex = 0)
         {
             int start = box.TextLength;
-            string text = string.Format("{0} {1}", box.Lines.Count(), this.Employee.Title);
+            string text = string.Format("[{0}] {1} -> ", lineIndex == 0 ? box.Lines.Count() : lineIndex, this.Employee.Title);
             box.AppendText(text);
             box.Select(start, text.Length);
+            box.SelectionFont = new Font(box.Font, FontStyle.Bold);
             if (this.Errors.Any())
                 box.SelectionColor = Color.Red;
             else if (this.Warnings.Any())
@@ -42,14 +45,17 @@ namespace Iris.Importer
             else
                 box.SelectionColor = Color.Green;
             box.SelectionLength = 0; // clear
+            box.SelectionFont = new Font(box.Font, FontStyle.Regular);
 
             start = box.TextLength;
-            var errors = string.Join(",", this.Errors.Select(x => x.Message));           
+            var errors = string.Join(", ", this.Errors.Select(x => x.Message));           
             box.AppendText(errors);
             box.Select(start, errors.Length);
             box.SelectionColor = Color.Red;
-            
+            box.SelectionLength = 0; // clear
 
+            if(errors.Length > 0)
+                box.AppendText(" ");
             start = box.TextLength;
             var warnings = string.Join(",", this.Warnings.Select(x => x.Message));
             box.AppendText(warnings);
