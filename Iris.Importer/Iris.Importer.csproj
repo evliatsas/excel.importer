@@ -91,6 +91,7 @@
     <Compile Include="HeaderSelector.Designer.cs">
       <DependentUpon>HeaderSelector.cs</DependentUpon>
     </Compile>
+    <Compile Include="EmployeeImporter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ValidationMessage.cs" />

@@ -11,5 +11,8 @@
     <Setting Name="pwd" Type="System.String" Scope="Application">
       <Value Profile="(Default)">how_you_wanna_do_this</Value>
     </Setting>
+    <Setting Name="siteId" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">xenia</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

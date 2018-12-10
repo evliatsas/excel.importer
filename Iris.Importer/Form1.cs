@@ -1,23 +1,20 @@
-﻿using System;
+﻿using OfficeOpenXml;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-
-using OfficeOpenXml;
 
 namespace Iris.Importer
 {
     public partial class Form1 : Form
     {
+        private List<CheckResult> _checkResults;
         public Form1()
         {
             InitializeComponent();
+
+            _checkResults = new List<CheckResult>();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -60,6 +57,7 @@ namespace Iris.Importer
         {
             var fi = new FileInfo(openFileDialog1.FileName);
             var validator = new EmployeeValidator();
+            _checkResults.Clear();
             using (var p = new ExcelPackage(fi))
             {
                 var workSheet = p.Workbook.Worksheets.First();
@@ -69,7 +67,7 @@ namespace Iris.Importer
                 var end = workSheet.Dimension.End;
 
                 var startRow = start.Row + offset;
-
+                
                 for (int row = startRow; row <= end.Row; row++)
                 {                   
                     var result = new CheckResult();
@@ -163,11 +161,16 @@ namespace Iris.Importer
                                     result.AddMessage(validator.CheckPosition(cellValue, out dutyPosition));
                                     result.Employee.Duties.First().Position = dutyPosition;
                                     break;
+                                case 18:
+                                    var pwd = string.IsNullOrEmpty(cellValue) ? "12345678" : cellValue;
+                                    result.Employee.Tag = pwd;
+                                    break;
                             }
                         }
                     }
 
                     result.WriteLine(this.richTextBox1, row);
+                    _checkResults.Add(result);
                 }
             }
         }
@@ -179,6 +182,23 @@ namespace Iris.Importer
                 var header = this.flowLayoutPanel1.Controls[i] as HeaderSelector;
                 header.SetIndex(i);
             }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            if(_checkResults.Count == 0)
+            {
+                MessageBox.Show("Δεν έχει πραγματοποιηθεί έλεγχος των δεδομένων.", "Διαχείριση", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (_checkResults.Any(a=>a.Errors.Count > 0))
+            {
+                MessageBox.Show("O έλεγχος των δεδομένων έχει επιστρέψει σφάλματα. Παρακαλώ διορθώστε τα πρώτα.", "Διαχείριση", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            var importer = new EmployeeImporter();
+            var employees = _checkResults.Select(x => x.Employee);
+            importer.Import(employees);
         }
     }
 }

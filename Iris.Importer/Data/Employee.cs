@@ -10,6 +10,19 @@ namespace Iris.Importer
         #region Properties
 
         /// <summary>
+        /// The Unique Identification (Primary Key) of the Entity
+        /// </summary>
+        public string Id { get; set; }
+
+        /// <summary>
+        /// The Identification of the Parent Application Site
+        /// </summary>
+        public string SiteId { get; set; }
+        /// <summary>
+        /// Data Placeholder
+        /// </summary>
+        public object Tag { get; set; }
+        /// <summary>
         /// First Name
         /// </summary>
         public string FirstName { get; set; }
