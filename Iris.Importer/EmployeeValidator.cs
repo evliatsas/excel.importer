@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -7,11 +8,21 @@ namespace Iris.Importer
     public class EmployeeValidator
     {
         private IMongoDatabase _db;
+        private List<Speciality> _specialities;
+        private List<Position> _positions;
+        private List<Duty> _duties;
+        private List<string> _emails;
+
         public EmployeeValidator()
         {
             var cs = string.Format("mongodb://{0}:{1}@{2}", Properties.Settings.Default.username, Properties.Settings.Default.pwd, Properties.Settings.Default.server);
             var client = new MongoDB.Driver.MongoClient(cs);
             _db = client.GetDatabase("Common");
+
+            _specialities = _db.GetCollection<Speciality>("Specialities").Find(x=>true).ToList();
+            _positions = _db.GetCollection<Position>("Positions").Find(x => true).ToList();
+            _duties = _db.GetCollection<Duty>("Duties").Find(x => true).ToList();
+            _emails = _db.GetCollection<Employee>("Employees").Find(x => true).Project<Employee>(Builders<Employee>.Projection.Include(x => x.ContactInfo)).ToList().Select(x=>x.ContactInfo.EMail).ToList();
         }
 
         public ValidationMessage CheckLastName(string value)
@@ -137,10 +148,11 @@ namespace Iris.Importer
                 var email = new System.Net.Mail.MailAddress(value);
 
                 //check if email already assigned to another employee
-                var collection = _db.GetCollection<Employee>("Employees");
-                var filter = Builders<Employee>.Filter.Eq<string>("ContactInfo.EMail", email.Address);
-                var query = collection.Find(filter);
-                var exists = query.Any();
+                //var collection = _db.GetCollection<Employee>("Employees");
+                //var filter = Builders<Employee>.Filter.Eq<string>("ContactInfo.EMail", email.Address);
+                //var query = collection.Find(filter);
+                //var exists = query.Any();
+                var exists = _emails.Any(x => string.Equals(x, email.Address, System.StringComparison.InvariantCultureIgnoreCase));
                 if (exists)
                 {
                     return new ValidationMessage(ValidationType.Error, "email address already exists");
@@ -244,10 +256,7 @@ namespace Iris.Importer
             {
 
                 //check if speciality already exists
-                var collection = _db.GetCollection<Speciality>("Specialities");
-                var filter = Builders<Speciality>.Filter.Eq<string>("Description", value);
-                var query = collection.Find(filter);
-                var existing = query.FirstOrDefault();
+                var existing = _specialities.FirstOrDefault(x=>x.Description == value);
 
                 if (existing == null)
                     return new ValidationMessage(ValidationType.Warning, "Specified speciality not found, set to default");
@@ -303,12 +312,8 @@ namespace Iris.Importer
             }
             else
             {
-
                 //check if speciality already exists
-                var collection = _db.GetCollection<Position>("Positions");
-                var filter = Builders<Position>.Filter.Eq<string>("Name", value);
-                var query = collection.Find(filter);
-                var existing = query.FirstOrDefault();
+                var existing = _positions.FirstOrDefault(x=>x.Name == value);
 
                 if (existing == null)
                     return new ValidationMessage(ValidationType.Error, $"{header} not found");
@@ -330,10 +335,7 @@ namespace Iris.Importer
             {
 
                 //check if speciality already exists
-                var collection = _db.GetCollection<Duty>("Duties");
-                var filter = Builders<Duty>.Filter.Eq<string>("Description", value);
-                var query = collection.Find(filter);
-                var existing = query.FirstOrDefault();
+                var existing = _duties.FirstOrDefault(x=>x.Description == value);
 
                 if (existing == null)
                     return new ValidationMessage(ValidationType.Error, "Specified duty not found");
