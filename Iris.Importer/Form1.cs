@@ -55,9 +55,46 @@ namespace Iris.Importer
 
         private void button2_Click(object sender, EventArgs e)
         {
+            _checkResults.Clear();
+            this.richTextBox1.Clear();
+            var headers = this.flowLayoutPanel1.Controls.Cast<HeaderSelector>().Select(x=>x.Data).ToList();
+            button2.Enabled = false;
+            button4.Enabled = false;
+            backgroundWorker1.RunWorkerAsync(headers);
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            for (var i=0;i<this.flowLayoutPanel1.Controls.Count;i++)
+            {
+                var header = this.flowLayoutPanel1.Controls[i] as HeaderSelector;
+                header.SetIndex(i);
+            }
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            if(!_checkResults.Any())
+            {
+                MessageBox.Show("Δεν έχει πραγματοποιηθεί έλεγχος των δεδομένων.", "Διαχείριση", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (_checkResults.Any(a=>a.Errors.Any()))
+            {
+                MessageBox.Show("O έλεγχος των δεδομένων έχει επιστρέψει σφάλματα. Παρακαλώ διορθώστε τα πρώτα.", "Διαχείριση", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            var importer = new EmployeeImporter();
+            var employees = _checkResults.Select(x => x.Employee);
+            importer.Import(employees);
+        }
+
+        private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            var cc = e.Argument as List<HeaderData>;
             var fi = new FileInfo(openFileDialog1.FileName);
             var validator = new EmployeeValidator();
-            _checkResults.Clear();
+            List<CheckResult> checkResults = new List<CheckResult>();
             using (var p = new ExcelPackage(fi))
             {
                 var workSheet = p.Workbook.Worksheets.First();
@@ -67,19 +104,19 @@ namespace Iris.Importer
                 var end = workSheet.Dimension.End;
 
                 var startRow = start.Row + offset;
-                
+
                 for (int row = startRow; row <= end.Row; row++)
-                {                   
+                {
                     var result = new CheckResult();
 
                     for (int col = start.Column; col <= end.Column; col++)
                     {
                         string cellValue = workSheet.Cells[row, col].Text;
 
-                        var header = this.flowLayoutPanel1.Controls[col - 1] as HeaderSelector;
-                        if (header.Data.IsChecked)
+                        var header = cc[col - 1];
+                        if (header.IsChecked)
                         {
-                            switch (header.Data.PropertyIndex)
+                            switch (header.PropertyIndex)
                             {
                                 case 0:
                                     result.AddMessage(validator.CheckLastName(cellValue));
@@ -143,12 +180,12 @@ namespace Iris.Importer
                                     break;
                                 case 14:
                                     Lookup<int> position;
-                                    result.AddMessage(validator.CheckPosition(cellValue, out position));
+                                    result.AddMessage(validator.CheckPosition(cellValue, header.Property, out position));
                                     result.Employee.Position = position;
                                     break;
                                 case 15:
                                     Lookup<int> unit;
-                                    result.AddMessage(validator.CheckPosition(cellValue, out unit));
+                                    result.AddMessage(validator.CheckPosition(cellValue, header.Property, out unit));
                                     result.Employee.Unit = unit;
                                     break;
                                 case 16:
@@ -158,7 +195,7 @@ namespace Iris.Importer
                                     break;
                                 case 17:
                                     Lookup<int> dutyPosition;
-                                    result.AddMessage(validator.CheckPosition(cellValue, out dutyPosition));
+                                    result.AddMessage(validator.CheckPosition(cellValue, header.Property, out dutyPosition));
                                     result.Employee.Duties.First().Position = dutyPosition;
                                     break;
                                 case 18:
@@ -169,36 +206,26 @@ namespace Iris.Importer
                         }
                     }
 
-                    result.WriteLine(this.richTextBox1, row);
-                    _checkResults.Add(result);
+                    backgroundWorker1.ReportProgress(row, result);
+                    checkResults.Add(result);
                 }
             }
+
+            e.Result = checkResults;
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void backgroundWorker1_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
         {
-            for (var i=0;i<this.flowLayoutPanel1.Controls.Count;i++)
-            {
-                var header = this.flowLayoutPanel1.Controls[i] as HeaderSelector;
-                header.SetIndex(i);
-            }
+            label2.Text = $"Checking row {e.ProgressPercentage}";
+            var result = e.UserState as CheckResult;
+            result.WriteLine(this.richTextBox1, e.ProgressPercentage);
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        private void backgroundWorker1_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
         {
-            if(_checkResults.Count == 0)
-            {
-                MessageBox.Show("Δεν έχει πραγματοποιηθεί έλεγχος των δεδομένων.", "Διαχείριση", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            if (_checkResults.Any(a=>a.Errors.Count > 0))
-            {
-                MessageBox.Show("O έλεγχος των δεδομένων έχει επιστρέψει σφάλματα. Παρακαλώ διορθώστε τα πρώτα.", "Διαχείριση", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            var importer = new EmployeeImporter();
-            var employees = _checkResults.Select(x => x.Employee);
-            importer.Import(employees);
+            button2.Enabled = true;
+            button4.Enabled = true;
+            this._checkResults = e.Result as List<CheckResult>;
         }
     }
 }

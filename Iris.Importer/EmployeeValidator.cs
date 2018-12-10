@@ -294,7 +294,7 @@ namespace Iris.Importer
                 return new ValidationMessage();
             }
         }
-        public ValidationMessage CheckPosition(string value, out Lookup<int> position)
+        public ValidationMessage CheckPosition(string value, string header, out Lookup<int> position)
         {
             position = new Lookup<int>() { Id = -1, Description = "" };
             if (string.IsNullOrEmpty(value))
@@ -311,7 +311,7 @@ namespace Iris.Importer
                 var existing = query.FirstOrDefault();
 
                 if (existing == null)
-                    return new ValidationMessage(ValidationType.Error, "Specified position not found");
+                    return new ValidationMessage(ValidationType.Error, $"{header} not found");
                 else
                 {
                     position = new Lookup<int>() { Id = existing.Hstr_Id, Description = existing.Name };

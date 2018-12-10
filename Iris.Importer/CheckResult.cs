@@ -39,7 +39,7 @@ namespace Iris.Importer
             if (this.Errors.Any())
                 box.SelectionColor = Color.Red;
             else if (this.Warnings.Any())
-                box.SelectionColor = Color.Yellow;
+                box.SelectionColor = Color.Black;
             else
                 box.SelectionColor = Color.Green;
             box.SelectionLength = 0; // clear
@@ -58,7 +58,7 @@ namespace Iris.Importer
             var warnings = string.Join(",", this.Warnings.Select(x => x.Message));
             box.AppendText(warnings);
             box.Select(start, warnings.Length);
-            box.SelectionColor = Color.Yellow;
+            box.SelectionColor = Color.Black;
             box.SelectionLength = 0; // clear
 
             box.AppendText(Environment.NewLine);
